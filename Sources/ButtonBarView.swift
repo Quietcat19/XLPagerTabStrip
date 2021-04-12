@@ -46,11 +46,17 @@ public enum SelectedBarVerticalAlignment {
 open class ButtonBarView: UICollectionView {
 
     open lazy var selectedBar: UIView = { [unowned self] in
-        let bar  = UIView(frame: CGRect(x: 0, y: self.frame.size.height - CGFloat(self.selectedBarHeight), width: 0, height: CGFloat(self.selectedBarHeight)))
+//        let bar  = UIView(frame: CGRect(x: 0, y: self.frame.size.height - CGFloat(self.selectedBarHeight), width: 0, height: CGFloat(self.selectedBarHeight)))
+        // modify by QC 上面是源码
+        var bar  = UIView(frame: CGRect(x: 0, y: self.frame.size.height - CGFloat(self.selectedBarHeight), width: 0, height: CGFloat(self.selectedBarHeight)))
+        if self.selectedBarWidth != -1 {
+            bar = UIView(frame: CGRect(x: 0, y: self.frame.size.height - CGFloat(self.selectedBarHeight), width: CGFloat(self.selectedBarWidth), height: CGFloat(self.selectedBarHeight)))
+        }
         bar.layer.zPosition = 9999
         return bar
     }()
 
+    internal var selectedBarWidth: CGFloat = -1
     internal var selectedBarHeight: CGFloat = 4 {
         didSet {
             updateSelectedBarYPosition()
@@ -97,8 +103,17 @@ open class ButtonBarView: UICollectionView {
 
         var targetFrame = fromFrame
         targetFrame.size.height = selectedBar.frame.size.height
-        targetFrame.size.width += (toFrame.size.width - fromFrame.size.width) * progressPercentage
-        targetFrame.origin.x += (toFrame.origin.x - fromFrame.origin.x) * progressPercentage
+//        targetFrame.size.width += (toFrame.size.width - fromFrame.size.width) * progressPercentage
+//        targetFrame.origin.x += (toFrame.origin.x - fromFrame.origin.x) * progressPercentage
+        // modify by QC 上面是源码
+        if self.selectedBarWidth == -1 {
+            targetFrame.size.width += (toFrame.size.width - fromFrame.size.width) * progressPercentage
+            targetFrame.origin.x += (toFrame.origin.x - fromFrame.origin.x) * progressPercentage
+        } else {
+            targetFrame.size.width = self.selectedBarWidth
+            targetFrame.origin.x = fromFrame.origin.x + (fromFrame.size.width - self.selectedBarWidth) * 0.5
+            targetFrame.origin.x += ((toFrame.origin.x + (toFrame.size.width - self.selectedBarWidth) * 0.5) - targetFrame.origin.x) * progressPercentage
+        }
 
         selectedBar.frame = CGRect(x: targetFrame.origin.x, y: selectedBar.frame.origin.y, width: targetFrame.size.width, height: selectedBar.frame.size.height)
 
@@ -122,8 +137,16 @@ open class ButtonBarView: UICollectionView {
 
         updateContentOffset(animated: animated, pagerScroll: pagerScroll, toFrame: selectedCellFrame, toIndex: (selectedCellIndexPath as NSIndexPath).row)
 
-        selectedBarFrame.size.width = selectedCellFrame.size.width
-        selectedBarFrame.origin.x = selectedCellFrame.origin.x
+//        selectedBarFrame.size.width = selectedCellFrame.size.width
+//        selectedBarFrame.origin.x = selectedCellFrame.origin.x
+        // modify by QC 上面是源码
+        if self.selectedBarWidth == -1 {
+            selectedBarFrame.size.width = selectedCellFrame.size.width
+            selectedBarFrame.origin.x = selectedCellFrame.origin.x
+        } else {
+            selectedBarFrame.size.width = self.selectedBarWidth
+            selectedBarFrame.origin.x = selectedCellFrame.origin.x + (selectedCellFrame.size.width - selectedBarFrame.size.width) * 0.5
+        }
 
         if animated {
             UIView.animate(withDuration: 0.3, animations: { [weak self] in
